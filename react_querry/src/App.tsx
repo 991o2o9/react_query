@@ -1,19 +1,47 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import './App.css';
-const getData = async () => {
-  const response = await fetch(`https://jsonplaceholder.typicode.com/posts  `);
-  return response.json();
-};
+import { usePostById } from './hooks/usePostById';
+import { usePosts } from './hooks/usePosts';
+import axios from 'axios';
+import { IPost } from './type/post.types';
+
+const isAuth = true;
+
 function App() {
-  const { data, isLoading } = useQuery({
-    queryKey: ['posts'],
-    queryFn: getData,
+  const { isLoading, data } = usePosts(isAuth);
+  const { post } = usePostById(2);
+
+  // const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
+    mutationKey: ['add post'],
+    mutationFn: async (newPost: Omit<IPost, 'id'>) =>
+      axios.post(`https://jsonplaceholder.typicode.com/posts/`, newPost),
   });
 
+  // queryClient.invalidateQueries({ queryKey: ['posts'] });
   return (
     <>
       <h1>Vite + React</h1>
+      <button
+        onClick={() => {
+          mutate({
+            body: 'new body',
+            title: 'new title',
+            userId: 1,
+          });
+        }}
+        disabled={isPending}
+      >
+        {isPending ? 'loading...' : 'create'}
+      </button>
+      <div className="flex flex-col gap-[10px]">
+        <h2 className="p-0 m-0">recommended post:</h2>
+        <div className="bg-[#2B373E]">
+          <span className="">{post?.title}</span>
+        </div>
+      </div>
       <div>
         {isLoading ? (
           'Loading...'
